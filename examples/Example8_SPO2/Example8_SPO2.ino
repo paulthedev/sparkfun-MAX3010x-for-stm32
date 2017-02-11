@@ -34,15 +34,8 @@ MAX30105 particleSensor;
 
 #define MAX_BRIGHTNESS 255
 
-#if defined(ARDUINO_AVR_UNO)
-//Arduino Uno doesn't have enough SRAM to store 100 samples of IR led data and red led data in 32-bit format
-//To solve this problem, 16-bit MSB of the sampled data will be truncated. Samples become 16-bit data.
-uint16_t irBuffer[100]; //infrared LED sensor data
-uint16_t redBuffer[100];  //red LED sensor data
-#else
 uint32_t irBuffer[100]; //infrared LED sensor data
 uint32_t redBuffer[100];  //red LED sensor data
-#endif
 
 int32_t bufferLength; //data length
 int32_t spo2; //SPO2 value
@@ -50,15 +43,12 @@ int8_t validSPO2; //indicator to show if the SPO2 calculation is valid
 int32_t heartRate; //heart rate value
 int8_t validHeartRate; //indicator to show if the heart rate calculation is valid
 
-byte pulseLED = 11; //Must be on PWM pin
-byte readLED = 13; //Blinks with each data read
+
 
 void setup()
 {
   Serial.begin(115200); // initialize serial communication at 115200 bits per second:
 
-  pinMode(pulseLED, OUTPUT);
-  pinMode(readLED, OUTPUT);
 
   // Initialize sensor
   if (!particleSensor.begin())
@@ -66,10 +56,6 @@ void setup()
     Serial.println(F("MAX30105 was not found. Please check wiring/power."));
     while (1);
   }
-
-  Serial.println(F("Attach sensor to finger with rubber band. Press any key to start conversion"));
-  while (Serial.available() == 0) ; //wait until user presses a key
-  Serial.read();
 
   byte ledBrightness = 60; //Options: 0=Off to 255=50mA
   byte sampleAverage = 4; //Options: 1, 2, 4, 8, 16, 32
@@ -120,7 +106,6 @@ void loop()
       while (particleSensor.available() == false) //do we have new data?
         particleSensor.check(); //Check the sensor for new data
 
-      digitalWrite(readLED, !digitalRead(readLED)); //Blink onboard LED with every data read
 
       redBuffer[i] = particleSensor.getRed();
       irBuffer[i] = particleSensor.getIR();
